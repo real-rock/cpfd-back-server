@@ -36,8 +36,8 @@ func (r *ParticleRepo) GetLogsWithDates(start, end string) (map[string][]map[str
 	for _, machine := range machines {
 		var particle []map[string]interface{}
 
-		sql := fmt.Sprintf("select DATE_FORMAT(time, '%s') as time, pm1, pm2_5, pm10 from particles where machine='%s' and time between '%s' and '%s' order by time",
-			dateFormat, machine, start, end)
+		sql := fmt.Sprintf("select UNIX_TIMESTAMP(time) as time, pm1, pm2_5, pm10 from particles where machine='%s' and time between '%s' and '%s' order by time",
+			machine, start, end)
 
 		if err := r.Mysql.Raw(sql).Scan(&particle).Error; err != nil {
 			log.Printf("[ERROR] Failed to get particles: %v", err)
