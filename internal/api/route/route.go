@@ -15,5 +15,6 @@ func SetInout(router *gin.RouterGroup, handler *handler.InoutHandler) {
 func SetParticle(router *gin.RouterGroup, handler *handler.ParticleHandler) {
 	router.GET("/logs/particle", handler.GetLogs)
 	router.GET("/logs/chart/particle", handler.GetLogWithDates)
+	router.GET("/logs/file/particle", handler.GetLogToFile)
 	router.POST("/logs/particle", handler.CreateLog)
 }
