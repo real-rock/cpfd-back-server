@@ -57,7 +57,7 @@ func (r *ParticleRepo) GetLogsToFile(start, end string) (string, error) {
 	}()
 	sql := fmt.Sprintf("select 'DATE', 'PM1', 'PM2.5', 'PM10', 'PM1_OUT', 'PM2.5_OUT', 'PM10_OUT', 'PM1_H_OUT', 'PM2.5_H_OUT', 'PM10_H_OUT' union all"+
 		" select tt.time, tt.pm1, tt.pm2_5, tt.pm10, gg.pm1_out, "+
-		"gg.pm2_5_out, gg.pm10_out, vv.pm1, vv.pm2_5, vv.pm10 into outfile '%s' from ("+
+		"gg.pm2_5_out, gg.pm10_out, vv.pm1, vv.pm2_5, vv.pm10 into outfile '%s' FIELDS TERMINATED BY ',' LINES TERMINATED BY '\\n' from ("+
 		"select f_time as time, avg_pm1 as pm1, avg_pm2_5 as pm2_5, avg_pm10 as pm10 from %s where location = 'IN') as tt "+
 		"left outer join (select f_time as time, avg_pm1 as pm1_out, avg_pm2_5 as pm2_5_out, avg_pm10 as pm10_out from %s where location = 'OUT') as gg on tt.time = gg.time left outer join ("+
 		"select f_time as time, avg_pm1 as pm1, avg_pm2_5 as pm2_5, avg_pm10 as pm10 from %s where location = 'HALL_OUT') as vv on tt.time = vv.time;", filePath, name, name, name)
