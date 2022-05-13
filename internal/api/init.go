@@ -5,6 +5,7 @@ import (
 	"cpfd-back/internal/api/repo"
 	"cpfd-back/internal/api/route"
 	"cpfd-back/internal/api/service"
+	"cpfd-back/internal/conf/grpc"
 	"cpfd-back/internal/conf/mysqlDb"
 	"cpfd-back/internal/conf/redisDb"
 	"cpfd-back/internal/core/model"
@@ -61,7 +62,7 @@ func (r *Router) setInout() {
 
 func (r *Router) setParticle() {
 	re := repo.NewParticleRepo(r.Mysql.DB)
-	s := service.NewParticleService(re)
+	s := service.NewParticleService(re, grpc.New())
 	h := handler.NewParticleHandler(s)
 	route.SetParticle(r.Engine.Group("/v1"), h)
 }

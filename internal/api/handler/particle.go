@@ -2,7 +2,6 @@ package handler
 
 import (
 	"cpfd-back/internal/api/service"
-	"cpfd-back/internal/core"
 	"cpfd-back/internal/core/model"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -42,12 +41,12 @@ func (h *ParticleHandler) GetLogToFile(ctx *gin.Context) {
 		return
 	}
 
-	fileName, err := h.service.GetLogToFile(req.Start, req.End)
+	filePath, err := h.service.GetLogToFile(req.Start, req.End)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
-	filePath := core.FileDir + "/" + fileName + ".csv"
+	//filePath := core.FileDir + "/" + fileName + ".csv"
 	ctx.File(filePath)
 	defer func() {
 		if err := os.Remove(filePath); err != nil {

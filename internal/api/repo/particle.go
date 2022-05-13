@@ -33,11 +33,13 @@ func (r *ParticleRepo) GetAllLogs() ([]model.Particle, error) {
 	return particles, nil
 }
 
-func (r *ParticleRepo) GetLogsToFile(start, end string) (string, error) {
+func (r *ParticleRepo) GetLogsToFile(start, end string) ([]string, error) {
 	num := rand.New(rand.NewSource(time.Now().UnixNano())).Intn(100)
-	name := "n_" + strconv.Itoa(num)
+	name := "particle_" + strconv.Itoa(num)
+	activityName := "activity_" + strconv.Itoa(num)
 
-	filePath := core.MysqlFilePath + "/" + name + ".csv"
+	particlePath := core.MysqlFilePath + "/" + name + ".csv"
+	activityPath := core.MysqlFilePath + "/" + activityName + ".csv"
 
 	viewSql := fmt.Sprintf("create view %s as(select DATE_FORMAT(p.time, '%s') as f_time, AVG(p.pm1) as avg_pm1, AVG(p.pm2_5) as avg_pm2_5, AVG(p.pm10) as avg_pm10, m.location "+
 		"from particles as p join machines m on m.id = p.machine "+
@@ -46,7 +48,7 @@ func (r *ParticleRepo) GetLogsToFile(start, end string) (string, error) {
 
 	if err := r.Mysql.Exec(viewSql).Error; err != nil {
 		log.Printf("[ERROR] Failed to create view '%s': %v", start+end, err)
-		return "", err
+		return nil, err
 	}
 	defer func() {
 		dropViewSql := fmt.Sprintf("drop view %s;", name)
@@ -60,13 +62,21 @@ func (r *ParticleRepo) GetLogsToFile(start, end string) (string, error) {
 		"gg.pm2_5_out, gg.pm10_out, vv.pm1, vv.pm2_5, vv.pm10 into outfile '%s' FIELDS TERMINATED BY ',' LINES TERMINATED BY '\\n' from ("+
 		"select f_time as time, avg_pm1 as pm1, avg_pm2_5 as pm2_5, avg_pm10 as pm10 from %s where location = 'IN') as tt "+
 		"left outer join (select f_time as time, avg_pm1 as pm1_out, avg_pm2_5 as pm2_5_out, avg_pm10 as pm10_out from %s where location = 'OUT') as gg on tt.time = gg.time left outer join ("+
-		"select f_time as time, avg_pm1 as pm1, avg_pm2_5 as pm2_5, avg_pm10 as pm10 from %s where location = 'HALL_OUT') as vv on tt.time = vv.time;", filePath, name, name, name)
+		"select f_time as time, avg_pm1 as pm1, avg_pm2_5 as pm2_5, avg_pm10 as pm10 from %s where location = 'HALL_OUT') as vv on tt.time = vv.time;", particlePath, name, name, name)
 
 	if err := r.Mysql.Exec(sql).Error; err != nil {
 		log.Printf("[ERROR] Failed to generate data: %v", err)
-		return "", err
+		return nil, err
 	}
-	return name, nil
+
+	activitySql := fmt.Sprintf("select 'NAME', 'TIME', 'ACTION', 'TYPE' union all "+
+		"select * into outfile '%s' FIELDS TERMINATED BY ',' LINES TERMINATED BY '\\n' from activities where time < '%s'", activityPath, end)
+	if err := r.Mysql.Exec(activitySql).Error; err != nil {
+		log.Printf("[ERROR] Failed to create activity file")
+		return nil, err
+	}
+
+	return []string{core.FileDir + "/" + name + ".csv", core.FileDir + "/" + activityName + ".csv"}, nil
 }
 
 func (r *ParticleRepo) GetLogsWithDates(start, end string) (map[string][]map[string]interface{}, error) {
