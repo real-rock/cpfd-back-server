@@ -46,7 +46,6 @@ func (h *ParticleHandler) GetLogToFile(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
-	//filePath := core.FileDir + "/" + fileName + ".csv"
 	ctx.File(filePath)
 	defer func() {
 		if err := os.Remove(filePath); err != nil {

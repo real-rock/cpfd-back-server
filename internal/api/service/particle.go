@@ -31,6 +31,13 @@ func (s *ParticleService) GetLogToFile(startTime, endTime time.Time) (string, er
 	start := startTime.Format("2006-01-02 15:04:05")
 	end := endTime.Format("2006-01-02 15:04:05")
 
+	if start == "0001-01-01 00:00:00" {
+		start = core.StartDate
+	}
+	if end == "0001-01-01 00:00:00" {
+		end = time.Now().Format("2006-01-02 15:04:05")
+	}
+
 	paths, err := s.repo.GetLogsToFile(start, end)
 	if err != nil {
 		return "", err
