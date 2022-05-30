@@ -22,7 +22,7 @@ type Router struct {
 
 func ConnMysql() *mysqlDb.DB {
 	db := mysqlDb.New()
-	db.Migrate([]interface{}{&model.Activity{}, &model.Particle{}})
+	db.Migrate([]interface{}{&model.Activity{}, &model.Particle{}, &model.IndoorProperty{}})
 	return db
 }
 
@@ -51,6 +51,7 @@ func (r *Router) Run() {
 func (r *Router) Set() {
 	r.setInout()
 	r.setParticle()
+	r.setIndoorProperty()
 }
 
 func (r *Router) setInout() {
@@ -65,4 +66,11 @@ func (r *Router) setParticle() {
 	s := service.NewParticleService(re, grpc.New())
 	h := handler.NewParticleHandler(s)
 	route.SetParticle(r.Engine.Group("/v1"), h)
+}
+
+func (r *Router) setIndoorProperty() {
+	re := repo.NewIndoorPropertyRepo(r.Mysql.DB)
+	s := service.NewIndoorPropertyService(re)
+	h := handler.NewIndoorPropertyHandler(s)
+	route.SetIndoorProperty(r.Engine.Group("/v1"), h)
 }
