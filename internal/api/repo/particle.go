@@ -41,41 +41,22 @@ func (r *ParticleRepo) GetLogsToFile(start, end string) ([]string, error) {
 	particlePath := core.MysqlFilePath + "/" + name + ".csv"
 	activityPath := core.MysqlFilePath + "/" + activityName + ".csv"
 
-	viewSql := fmt.Sprintf("create view %s as(select DATE_FORMAT(p.time, '%s') as f_time, AVG(p.pm1) as avg_pm1, AVG(p.pm2_5) as avg_pm2_5, AVG(p.pm10) as avg_pm10, m.location "+
-		"from particles as p join machines m on m.id = p.machine "+
-		"where time between '%s' and '%s' "+
-		"group by f_time, location);", name, dateFormat, start, end)
-
-	if err := r.Mysql.Exec(viewSql).Error; err != nil {
-		log.Printf("[ERROR] Failed to create view '%s': %v", start+end, err)
-		return nil, err
-	}
-	defer func() {
-		dropViewSql := fmt.Sprintf("drop view %s;", name)
-		if err := r.Mysql.Exec(dropViewSql).Error; err != nil {
-			log.Printf("[ERROR] Failed to drop view '%v': %v", name, err)
-			return
-		}
-	}()
-	sql := fmt.Sprintf("select 'DATE', 'PM1', 'PM2.5', 'PM10', 'PM1_OUT', 'PM2.5_OUT', 'PM10_OUT', 'PM1_H_OUT', 'PM2.5_H_OUT', 'PM10_H_OUT' union all"+
-		" select tt.time, tt.pm1, tt.pm2_5, tt.pm10, gg.pm1_out, "+
-		"gg.pm2_5_out, gg.pm10_out, vv.pm1, vv.pm2_5, vv.pm10 into outfile '%s' FIELDS TERMINATED BY ',' LINES TERMINATED BY '\\n' from ("+
-		"select f_time as time, avg_pm1 as pm1, avg_pm2_5 as pm2_5, avg_pm10 as pm10 from %s where location = 'IN') as tt "+
-		"left outer join (select f_time as time, avg_pm1 as pm1_out, avg_pm2_5 as pm2_5_out, avg_pm10 as pm10_out from %s where location = 'OUT') as gg on tt.time = gg.time left outer join ("+
-		"select f_time as time, avg_pm1 as pm1, avg_pm2_5 as pm2_5, avg_pm10 as pm10 from %s where location = 'HALL_OUT') as vv on tt.time = vv.time;", particlePath, name, name, name)
+	sql := fmt.Sprintf("select DATE_FORMAT(time, '%s'), pm1, pm2_5, pm10, machine "+
+		"from particles where time between '%s' and '%s' "+
+		"into outfile '%s' FIELDS TERMINATED BY ',' LINES TERMINATED BY '\\n'", dateFormat, start, end, particlePath)
 
 	if err := r.Mysql.Exec(sql).Error; err != nil {
-		log.Printf("[ERROR] Failed to generate data: %v", err)
+		log.Printf("[ERROR] Failed to create particle file: %v", err)
 		return nil, err
 	}
+	sql = fmt.Sprintf("select name, DATE_FORMAT(time, '%s'), action, type "+
+		"from activities where time between '%s' and '%s' "+
+		"into outfile '%s' FIELDS TERMINATED BY ',' LINES TERMINATED BY '\\n'", dateFormat, start, end, activityPath)
 
-	activitySql := fmt.Sprintf("select 'NAME', 'TIME', 'ACTION', 'TYPE' union all "+
-		"select * into outfile '%s' FIELDS TERMINATED BY ',' LINES TERMINATED BY '\\n' from activities where time < '%s'", activityPath, end)
-	if err := r.Mysql.Exec(activitySql).Error; err != nil {
-		log.Printf("[ERROR] Failed to create activity file")
+	if err := r.Mysql.Exec(sql).Error; err != nil {
+		log.Printf("[ERROR] Failed to create activity file: %v", err)
 		return nil, err
 	}
-
 	return []string{core.FileDir + "/" + name + ".csv", core.FileDir + "/" + activityName + ".csv"}, nil
 }
 

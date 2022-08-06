@@ -14,9 +14,11 @@ type InoutService struct {
 }
 
 func NewInoutService(repo *repo.InoutRepo) *InoutService {
-	return &InoutService{
+	s := InoutService{
 		Repo: repo,
 	}
+	s.Init()
+	return &s
 }
 
 func (s *InoutService) Init() {

@@ -8,7 +8,6 @@ import (
 	"cpfd-back/internal/conf/grpc"
 	"cpfd-back/internal/conf/mysqlDb"
 	"cpfd-back/internal/conf/redisDb"
-	"cpfd-back/internal/core/model"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -22,7 +21,7 @@ type Router struct {
 
 func ConnMysql() *mysqlDb.DB {
 	db := mysqlDb.New()
-	db.Migrate([]interface{}{&model.Activity{}, &model.Particle{}, &model.IndoorProperty{}})
+	//db.Migrate([]interface{}{&model.Activity{}, &model.Particle{}, &model.IndoorProperty{}})
 	return db
 }
 

@@ -19,6 +19,7 @@ func SetParticle(router *gin.RouterGroup, handler *handler.ParticleHandler) {
 	router.POST("/logs/particle", handler.CreateLog)
 }
 
-func SetIndoorProperty(router *gin.RouterGroup, propertyHandler *handler.IndoorPropertyHandler) {
-	router.POST("/logs/indoor-property", propertyHandler.CreateLog)
+func SetIndoorProperty(router *gin.RouterGroup, handler *handler.IndoorPropertyHandler) {
+	router.POST("/logs/indoor-property", handler.CreateLog)
+	router.GET("/logs/file/indoor-property", handler.GetLogToCSV)
 }
