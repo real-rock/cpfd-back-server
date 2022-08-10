@@ -10,7 +10,7 @@ var CsvHeaders = []string{"NAME", "TIME", "ACTION", "TYPE"}
 const MysqlFilePath = "/var/lib/mysql-files"
 const FileDir = "/mysql-files"
 
-const StartDate = "2022-05-07 09:40:00"
+const StartDate = "2022-05-06 09:00:00"
 
 func init() {
 	loc, _ := time.LoadLocation("Asia/Seoul")

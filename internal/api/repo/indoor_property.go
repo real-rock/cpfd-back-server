@@ -36,12 +36,12 @@ func (r *IndoorPropertyRepo) GetLogToCSV(start, end string) (string, error) {
 	path := core.MysqlFilePath + "/" + name + ".csv"
 
 	sql := fmt.Sprintf("select 'DATE', 'TYPE', 'VALUE', 'MACHINE' union all "+
-		"select time, type, value, machine from indoor_activities where time between '%s' and '%s' "+
+		"select time, type, value, machine from indoor_properties where time between '%s' and '%s' "+
 		"into outfile '%s' FIELDS TERMINATED BY ',' LINES TERMINATED BY '\\n'", start, end, path)
 
 	if err := r.Mysql.Exec(sql).Error; err != nil {
 		log.Printf("[ERROR] Failed to create indoor-properties file: %v", err)
 		return "", err
 	}
-	return path, nil
+	return core.FileDir + "/" + name + ".csv", nil
 }

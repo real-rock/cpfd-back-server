@@ -47,7 +47,7 @@ func (r *InoutRepo) Init() {
 func (r *InoutRepo) GetLogs() ([][]string, error) {
 	var activities []map[string]interface{}
 
-	if err := r.Mysql.Table(model.ActivityTable).Find(&activities).Error; err != nil {
+	if err := r.Mysql.Table(model.ActivityTable).Order("time desc").Find(&activities).Error; err != nil {
 		log.Printf("[ERROR] Failed to get logs from mysql: %v", err)
 		return nil, err
 	}
