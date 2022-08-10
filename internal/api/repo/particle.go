@@ -41,17 +41,17 @@ func (r *ParticleRepo) GetLogsToFile(start, end string) ([]string, error) {
 	particlePath := core.MysqlFilePath + "/" + name + ".csv"
 	activityPath := core.MysqlFilePath + "/" + activityName + ".csv"
 
-	sql := fmt.Sprintf("select DATE_FORMAT(time, '%s'), pm1, pm2_5, pm10, machine "+
+	sql := fmt.Sprintf("select time, pm1, pm2_5, pm10, machine "+
 		"from particles where time between '%s' and '%s' "+
-		"into outfile '%s' FIELDS TERMINATED BY ',' LINES TERMINATED BY '\\n'", dateFormat, start, end, particlePath)
+		"into outfile '%s' FIELDS TERMINATED BY ',' LINES TERMINATED BY '\\n'", start, end, particlePath)
 
 	if err := r.Mysql.Exec(sql).Error; err != nil {
 		log.Printf("[ERROR] Failed to create particle file: %v", err)
 		return nil, err
 	}
-	sql = fmt.Sprintf("select name, DATE_FORMAT(time, '%s'), action, type "+
+	sql = fmt.Sprintf("select name, time, action, type "+
 		"from activities where time between '%s' and '%s' "+
-		"into outfile '%s' FIELDS TERMINATED BY ',' LINES TERMINATED BY '\\n'", dateFormat, start, end, activityPath)
+		"into outfile '%s' FIELDS TERMINATED BY ',' LINES TERMINATED BY '\\n'", start, end, activityPath)
 
 	if err := r.Mysql.Exec(sql).Error; err != nil {
 		log.Printf("[ERROR] Failed to create activity file: %v", err)
