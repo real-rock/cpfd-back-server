@@ -33,7 +33,7 @@ func (r *ParticleRepo) GetAllLogs() ([]model.Particle, error) {
 	return particles, nil
 }
 
-func (r *ParticleRepo) GetLogsToFile(start, end string) ([]string, error) {
+func (r *ParticleRepo) GetAllLogsToFile(start, end string) ([]string, error) {
 	num := rand.New(rand.NewSource(time.Now().UnixNano())).Intn(100)
 	name := "particle_" + strconv.Itoa(num)
 	activityName := "activity_" + strconv.Itoa(num)
@@ -77,6 +77,28 @@ func (r *ParticleRepo) GetLogsWithDates(start, end string) (map[string][]map[str
 		particles[machine] = particle
 	}
 	return particles, nil
+}
+
+func (r *ParticleRepo) GetLogsToFile(machine []string, start, end string) (string, error) {
+	num := rand.New(rand.NewSource(time.Now().UnixNano())).Intn(100)
+	name := "particle_" + strconv.Itoa(num)
+
+	particlePath := core.MysqlFilePath + "/" + name + ".csv"
+	machineStr := ""
+	for _, m := range machine {
+		machineStr = machineStr + m
+	}
+
+	sql := fmt.Sprintf("select 'DATE', 'PM1', 'PM2.5', 'PM10', 'MACHINE' union all "+
+		"select time, pm1, pm2_5, pm10, machine "+
+		"from particles where machine in (%s) and time between '%s' and '%s' "+
+		"into outfile '%s' FIELDS TERMINATED BY ',' LINES TERMINATED BY '\\n'", machineStr, start, end, particlePath)
+
+	if err := r.Mysql.Exec(sql).Error; err != nil {
+		log.Printf("[ERROR] Failed to create particle file: %v", err)
+		return "", err
+	}
+	return core.FileDir + "/" + name + ".csv", nil
 }
 
 func (r *ParticleRepo) CreateLog(p model.Particle) error {

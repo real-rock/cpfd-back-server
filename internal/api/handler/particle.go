@@ -31,21 +31,24 @@ func (h *ParticleHandler) GetLogs(ctx *gin.Context) {
 
 func (h *ParticleHandler) GetLogToFile(ctx *gin.Context) {
 	var req struct {
-		Start  time.Time `form:"start" time_format:"2006-01-02 15:04:05"`
-		End    time.Time `form:"end" time_format:"2006-01-02 15:04:05"`
-		Method string    `form:"method"`
+		Start   time.Time `form:"start" time_format:"2006-01-02 15:04:05"`
+		End     time.Time `form:"end" time_format:"2006-01-02 15:04:05"`
+		Method  string    `form:"method"`
+		Machine []string  `form:"machine"`
 	}
+	var filePath string
+	var err error
 
-	if err := ctx.ShouldBind(&req); err != nil {
+	if err = ctx.ShouldBind(&req); err != nil {
 		log.Println(err.Error())
 		ctx.JSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
-	filePath, err := h.service.GetLogToFile(req.Start, req.End, req.Method)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, err.Error())
-		return
+	if len(req.Machine) == 0 {
+		filePath, err = h.service.GetAllLogToFile(req.Start, req.End, req.Method)
+	} else {
+		filePath, err = h.service.GetLogToFile(req.Machine, req.Start, req.End)
 	}
 	ctx.File(filePath)
 	defer func() {

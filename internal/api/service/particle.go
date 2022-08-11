@@ -27,7 +27,7 @@ func (s *ParticleService) GetLogs() ([]model.Particle, error) {
 	return s.repo.GetAllLogs()
 }
 
-func (s *ParticleService) GetLogToFile(startTime, endTime time.Time, method string) (string, error) {
+func (s *ParticleService) GetAllLogToFile(startTime, endTime time.Time, method string) (string, error) {
 	start := startTime.Format("2006-01-02 15:04:05")
 	end := endTime.Format("2006-01-02 15:04:05")
 
@@ -41,7 +41,7 @@ func (s *ParticleService) GetLogToFile(startTime, endTime time.Time, method stri
 		method = "mean"
 	}
 
-	paths, err := s.repo.GetLogsToFile(start, end)
+	paths, err := s.repo.GetAllLogsToFile(start, end)
 	if err != nil {
 		return "", err
 	}
@@ -67,6 +67,20 @@ func (s *ParticleService) GetLogToFile(startTime, endTime time.Time, method stri
 		return "", err
 	}
 	return res.FilePath, nil
+}
+
+func (s *ParticleService) GetLogToFile(machines []string, startTime, endTime time.Time) (string, error) {
+	start := startTime.Format("2006-01-02 15:04:05")
+	end := endTime.Format("2006-01-02 15:04:05")
+
+	if start == "0001-01-01 00:00:00" {
+		start = core.StartDate
+	}
+	if end == "0001-01-01 00:00:00" {
+		end = time.Now().Format("2006-01-02 15:04:05")
+	}
+
+	return s.repo.GetLogsToFile(machines, start, end)
 }
 
 func (s *ParticleService) GetChartData(startTime, endTime time.Time) (map[string][]map[string]interface{}, error) {
