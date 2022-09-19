@@ -2,3 +2,5 @@
 *.env
 db.env
 .vscode
+cpfd-mysql
+cpfd-mysql/*
