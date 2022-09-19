@@ -16,13 +16,11 @@ type conf struct {
 }
 
 func newConf() conf {
-	log.SetFlags(log.Ltime | log.Lshortfile)
-
-	host := os.Getenv("DB_HOST")
-	port := os.Getenv("DB_PORT")
-	user := os.Getenv("DB_USER")
-	pwd := os.Getenv("DB_PASSWORD")
-	name := os.Getenv("DB_NAME")
+	host := os.Getenv("MYSQL_HOST")
+	port := os.Getenv("MYSQL_PORT")
+	user := os.Getenv("MYSQL_USR")
+	pwd := os.Getenv("MYSQL_PWD")
+	name := os.Getenv("MYSQL_DB")
 
 	if host == "" {
 		log.Println("MISSING DATABASE ENV: empty host\nChange to default host mysqlDb")

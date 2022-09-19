@@ -91,6 +91,7 @@ func (s *ParticleService) GetChartData(startTime, endTime time.Time) (map[string
 }
 
 func (s *ParticleService) CreateLog(p model.Particle) error {
-	p.Time = time.Now().In(core.Location)
+	//p.Time = time.Now().In(core.Location)
+	p.Time = time.Now()
 	return s.repo.CreateLog(p)
 }

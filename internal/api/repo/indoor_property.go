@@ -3,12 +3,13 @@ package repo
 import (
 	"cpfd-back/internal/core"
 	"cpfd-back/internal/core/model"
+	log "cpfd-back/internal/log"
 	"fmt"
-	"gorm.io/gorm"
-	"log"
 	"math/rand"
 	"strconv"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type IndoorPropertyRepo struct {
@@ -23,7 +24,7 @@ func NewIndoorPropertyRepo(mysqlDb *gorm.DB) *IndoorPropertyRepo {
 
 func (r *IndoorPropertyRepo) CreateLog(ip model.IndoorProperty) error {
 	if err := r.Mysql.Create(&ip).Error; err != nil {
-		log.Printf("[ERROR] Failed to create indoor property log: %v\n", err)
+		log.Logger.Errorln("failed to create indoor property log: ", err)
 		return err
 	}
 	return nil
@@ -40,7 +41,7 @@ func (r *IndoorPropertyRepo) GetLogToCSV(start, end string) (string, error) {
 		"into outfile '%s' FIELDS TERMINATED BY ',' LINES TERMINATED BY '\\n'", start, end, path)
 
 	if err := r.Mysql.Exec(sql).Error; err != nil {
-		log.Printf("[ERROR] Failed to create indoor-properties file: %v", err)
+		log.Logger.Errorln("failed to create indoor-properties file: ", err)
 		return "", err
 	}
 	return core.FileDir + "/" + name + ".csv", nil

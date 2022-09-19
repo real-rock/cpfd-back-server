@@ -5,6 +5,7 @@ import (
 )
 
 func main() {
+	setApp()
 	router := api.NewRouter()
 	router.Run()
 }

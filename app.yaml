@@ -1,0 +1,9 @@
+app:
+  name: cpfd
+  version: 0.0.1
+  production: false
+  storage:
+    - mysql
+    - redis
+  port: 80
+  logger: logrus

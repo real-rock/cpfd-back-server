@@ -3,15 +3,14 @@ package repo
 import (
 	"cpfd-back/internal/core"
 	"cpfd-back/internal/core/model"
+	log "cpfd-back/internal/log"
 	"fmt"
-	"gorm.io/gorm"
-	"log"
 	"math/rand"
 	"strconv"
 	"time"
-)
 
-const dateFormat = "%Y-%m-%d %H:%i"
+	"gorm.io/gorm"
+)
 
 type ParticleRepo struct {
 	Mysql *gorm.DB
@@ -27,7 +26,7 @@ func (r *ParticleRepo) GetAllLogs() ([]model.Particle, error) {
 	var particles []model.Particle
 
 	if err := r.Mysql.Find(&particles).Error; err != nil {
-		log.Printf("[ERROR] Failed to get particles from sql db: %v", err)
+		log.Logger.Errorf("failed to get particles from sql db: %v", err)
 		return nil, err
 	}
 	return particles, nil
@@ -41,20 +40,20 @@ func (r *ParticleRepo) GetAllLogsToFile(start, end string) ([]string, error) {
 	particlePath := core.MysqlFilePath + "/" + name + ".csv"
 	activityPath := core.MysqlFilePath + "/" + activityName + ".csv"
 
-	sql := fmt.Sprintf("select time, pm1, pm2_5, pm10, machine "+
-		"from particles where time between '%s' and '%s' "+
-		"into outfile '%s' FIELDS TERMINATED BY ',' LINES TERMINATED BY '\\n'", start, end, particlePath)
+	sql := fmt.Sprintf("SELECT time, pm1, pm2_5, pm10, machine "+
+		"FROM particles WHERE time BETWEEN '%s' AND '%s' "+
+		"INTO OUTFILE '%s' FIELDS TERMINATED BY ',' LINES TERMINATED BY '\\n'", start, end, particlePath)
 
 	if err := r.Mysql.Exec(sql).Error; err != nil {
-		log.Printf("[ERROR] Failed to create particle file: %v", err)
+		log.Logger.Errorf("failed to create particle file: %v", err)
 		return nil, err
 	}
-	sql = fmt.Sprintf("select name, time, action, type "+
-		"from activities where time between '%s' and '%s' "+
-		"into outfile '%s' FIELDS TERMINATED BY ',' LINES TERMINATED BY '\\n'", start, end, activityPath)
+	sql = fmt.Sprintf("SELECT name, time, action, type "+
+		"FROM activities WHERE time BETWEEN '%s' AND '%s' "+
+		"INTO OUTFILE '%s' FIELDS TERMINATED BY ',' LINES TERMINATED BY '\\n'", start, end, activityPath)
 
 	if err := r.Mysql.Exec(sql).Error; err != nil {
-		log.Printf("[ERROR] Failed to create activity file: %v", err)
+		log.Logger.Errorf("failed to create activity file: %v", err)
 		return nil, err
 	}
 	return []string{core.FileDir + "/" + name + ".csv", core.FileDir + "/" + activityName + ".csv"}, nil
@@ -67,11 +66,12 @@ func (r *ParticleRepo) GetLogsWithDates(start, end string) (map[string][]map[str
 	for _, machine := range machines {
 		var particle []map[string]interface{}
 
-		sql := fmt.Sprintf("select UNIX_TIMESTAMP(time) as time, pm1, pm2_5, pm10 from particles where machine='%s' and time between '%s' and '%s' order by time",
+		sql := fmt.Sprintf("SELECT UNIX_TIMESTAMP(time) as time, pm1, pm2_5, pm10 "+
+			"FROM particles WHERE machine='%s' AND time BETWEEN '%s' AND '%s' ORDER BY time",
 			machine, start, end)
 
 		if err := r.Mysql.Raw(sql).Scan(&particle).Error; err != nil {
-			log.Printf("[ERROR] Failed to get particles: %v", err)
+			log.Logger.Errorf("failed to get particles: %v", err)
 			return nil, err
 		}
 		particles[machine] = particle
@@ -89,13 +89,13 @@ func (r *ParticleRepo) GetLogsToFile(machine []string, start, end string) (strin
 		machineStr = machineStr + m
 	}
 
-	sql := fmt.Sprintf("select 'DATE', 'PM1', 'PM2.5', 'PM10', 'MACHINE' union all "+
-		"select time, pm1, pm2_5, pm10, machine "+
-		"from particles where machine in (%s) and time between '%s' and '%s' "+
-		"into outfile '%s' FIELDS TERMINATED BY ',' LINES TERMINATED BY '\\n'", machineStr, start, end, particlePath)
+	sql := fmt.Sprintf("SELECT 'DATE', 'PM1', 'PM2.5', 'PM10', 'MACHINE' UNION ALL "+
+		"SELECT time, pm1, pm2_5, pm10, machine "+
+		"FROM particles where machine in (%s) and TIME BETWEEN '%s' AND '%s' "+
+		"INTO OUTFILE '%s' FIELDS TERMINATED BY ',' LINES TERMINATED BY '\\n'", machineStr, start, end, particlePath)
 
 	if err := r.Mysql.Exec(sql).Error; err != nil {
-		log.Printf("[ERROR] Failed to create particle file: %v", err)
+		log.Logger.Errorf("failed to create particle file: %v", err)
 		return "", err
 	}
 	return core.FileDir + "/" + name + ".csv", nil

@@ -4,11 +4,12 @@ import (
 	"context"
 	"cpfd-back/internal/core"
 	"cpfd-back/internal/core/model"
+	log "cpfd-back/internal/log"
 	"fmt"
+	"time"
+
 	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
-	"log"
-	"time"
 )
 
 type InoutRepo struct {
@@ -30,25 +31,25 @@ func (r *InoutRepo) Init() {
 	}
 
 	for _, member := range core.Objects {
-		sqlCmd := fmt.Sprintf("select action from %s where `name` = '%s' order by time DESC limit 1;",
+		sqlCmd := fmt.Sprintf("SELECT action FROM %s WHERE `name` = '%s' ORDER BY time DESC LIMIT 1;",
 			model.ActivityTable, member)
 
 		if err := r.Mysql.Raw(sqlCmd).Scan(&res).Error; err != nil {
 			panic(err)
 		}
-		log.Printf("[INFO] action successfully fetched")
+		log.Logger.Infoln("action successfully fetched")
 		if err := r.Redis.Set(c, member, res.Action, 0).Err(); err != nil {
 			panic(err)
 		}
-		log.Printf("[INFO] {key: %s, val: %v} successfully saved to redis db", member, res.Action)
+		log.Logger.Infof("{key: %s, val: %v} successfully saved to redis db\n", member, res.Action)
 	}
 }
 
 func (r *InoutRepo) GetLogs() ([][]string, error) {
 	var activities []map[string]interface{}
 
-	if err := r.Mysql.Table(model.ActivityTable).Order("time desc").Find(&activities).Error; err != nil {
-		log.Printf("[ERROR] Failed to get logs from mysql: %v", err)
+	if err := r.Mysql.Table(model.ActivityTable).Limit(100).Order("time desc").Find(&activities).Error; err != nil {
+		log.Logger.Errorln("failed to get logs from mysql: ", err.Error())
 		return nil, err
 	}
 	values := make([][]string, len(activities))
@@ -74,10 +75,10 @@ func (r *InoutRepo) GetCurrentInfo() (map[string]bool, error) {
 	for _, member := range core.Objects {
 		action, err := r.Redis.Get(c, member).Result()
 		if err == redis.Nil {
-			log.Printf("[WARNING] Can't find key %s, return false default", member)
+			log.Logger.Warnf("can't find key %s, return false default\n", member)
 			action = "false"
 		} else if err != nil {
-			log.Printf("[ERROR] Failed fetching value from key %s: %v", member, err)
+			log.Logger.Errorf("failed fetching value from key %s: %v\n", member, err)
 			return nil, err
 		}
 		if action == "1" {
@@ -91,17 +92,18 @@ func (r *InoutRepo) GetCurrentInfo() (map[string]bool, error) {
 
 func (r *InoutRepo) CreateLog(name, objType string, action bool) error {
 	activity := model.Activity{
-		Name:      name,
-		TimeStamp: time.Now().In(core.Location),
+		Name: name,
+		//TimeStamp: time.Now().In(core.Location),
+		TimeStamp: time.Now(),
 		Action:    action,
 		Type:      objType,
 	}
 	if err := r.Mysql.Create(&activity).Error; err != nil {
-		log.Printf("[ERROR] error while saving data: %v", err)
+		log.Logger.Errorln("error while saving data: ", err.Error())
 		return err
 	}
 	if err := r.Redis.Set(context.Background(), name, action, 0).Err(); err != nil {
-		log.Printf("[ERROR] failed to save information to redis db: %v", err)
+		log.Logger.Errorln("failed to save information to redis db: ", err.Error())
 		return err
 	}
 	return nil

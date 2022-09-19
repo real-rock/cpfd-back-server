@@ -8,9 +8,14 @@ import (
 	"cpfd-back/internal/conf/grpc"
 	"cpfd-back/internal/conf/mysqlDb"
 	"cpfd-back/internal/conf/redisDb"
+	"fmt"
+	"io"
+	"log"
+	"os"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"log"
+	"github.com/spf13/viper"
 )
 
 type Router struct {
@@ -21,7 +26,6 @@ type Router struct {
 
 func ConnMysql() *mysqlDb.DB {
 	db := mysqlDb.New()
-	//db.Migrate([]interface{}{&model.Activity{}, &model.Particle{}, &model.IndoorProperty{}})
 	return db
 }
 
@@ -30,6 +34,14 @@ func ConnRedis() *redisDb.Redis {
 }
 
 func NewRouter() *Router {
+	if viper.Get("app.production") == true {
+		ginLog, err := os.Create("internal/log/gin.log")
+		if err == nil {
+			gin.DefaultWriter = io.MultiWriter(ginLog)
+		} else {
+			log.Println("[ERROR] Failed to create gin log file: ", err.Error())
+		}
+	}
 	router := gin.Default()
 	router.Use(cors.Default())
 	r := &Router{
@@ -42,7 +54,8 @@ func NewRouter() *Router {
 }
 
 func (r *Router) Run() {
-	if err := r.Engine.Run(":8080"); err != nil {
+	port := viper.Get("app.port")
+	if err := r.Engine.Run(fmt.Sprintf(":%s", port)); err != nil {
 		log.Fatalf("[ERROR] error while running server: %v", err)
 	}
 }

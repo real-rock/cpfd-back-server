@@ -2,9 +2,10 @@ package grpc
 
 import (
 	"cpfd-back/internal/core/pb"
+	"log"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"log"
 )
 
 type DataGen struct {
