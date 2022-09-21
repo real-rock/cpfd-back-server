@@ -92,8 +92,7 @@ func (r *InoutRepo) GetCurrentInfo() (map[string]bool, error) {
 
 func (r *InoutRepo) CreateLog(name, objType string, action bool) error {
 	activity := model.Activity{
-		Name: name,
-		//TimeStamp: time.Now().In(core.Location),
+		Name:      name,
 		TimeStamp: time.Now(),
 		Action:    action,
 		Type:      objType,

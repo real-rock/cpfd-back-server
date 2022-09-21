@@ -40,16 +40,17 @@ func (r *ParticleRepo) GetAllLogsToFile(start, end string) ([]string, error) {
 	particlePath := core.MysqlFilePath + "/" + name + ".csv"
 	activityPath := core.MysqlFilePath + "/" + activityName + ".csv"
 
-	sql := fmt.Sprintf("SELECT time, pm1, pm2_5, pm10, machine "+
-		"FROM particles WHERE time BETWEEN '%s' AND '%s' "+
+	sql := fmt.Sprintf("SELECT created_at, pm1, pm2_5, pm10, machine_num "+
+		"FROM particles left join machines m on m.id = particles.machine"+
+		"WHERE created_at BETWEEN '%s' AND '%s' "+
 		"INTO OUTFILE '%s' FIELDS TERMINATED BY ',' LINES TERMINATED BY '\\n'", start, end, particlePath)
 
 	if err := r.Mysql.Exec(sql).Error; err != nil {
 		log.Logger.Errorf("failed to create particle file: %v", err)
 		return nil, err
 	}
-	sql = fmt.Sprintf("SELECT name, time, action, type "+
-		"FROM activities WHERE time BETWEEN '%s' AND '%s' "+
+	sql = fmt.Sprintf("SELECT name, created_at, action, type "+
+		"FROM activities WHERE created_at BETWEEN '%s' AND '%s' "+
 		"INTO OUTFILE '%s' FIELDS TERMINATED BY ',' LINES TERMINATED BY '\\n'", start, end, activityPath)
 
 	if err := r.Mysql.Exec(sql).Error; err != nil {
@@ -66,7 +67,7 @@ func (r *ParticleRepo) GetLogsWithDates(start, end string) (map[string][]map[str
 	for _, machine := range machines {
 		var particle []map[string]interface{}
 
-		sql := fmt.Sprintf("SELECT UNIX_TIMESTAMP(time) as time, pm1, pm2_5, pm10 "+
+		sql := fmt.Sprintf("SELECT UNIX_TIMESTAMP(created_at) as time, pm1, pm2_5, pm10 "+
 			"FROM particles WHERE machine='%s' AND time BETWEEN '%s' AND '%s' ORDER BY time",
 			machine, start, end)
 
@@ -90,8 +91,9 @@ func (r *ParticleRepo) GetLogsToFile(machine []string, start, end string) (strin
 	}
 
 	sql := fmt.Sprintf("SELECT 'DATE', 'PM1', 'PM2.5', 'PM10', 'MACHINE' UNION ALL "+
-		"SELECT time, pm1, pm2_5, pm10, machine "+
-		"FROM particles where machine in (%s) and TIME BETWEEN '%s' AND '%s' "+
+		"SELECT created_at, pm1, pm2_5, pm10, machine_num "+
+		"FROM particles left join machines m on m.id = particles.machine "+
+		"WHERE machine in (%s) and TIME BETWEEN '%s' AND '%s' "+
 		"INTO OUTFILE '%s' FIELDS TERMINATED BY ',' LINES TERMINATED BY '\\n'", machineStr, start, end, particlePath)
 
 	if err := r.Mysql.Exec(sql).Error; err != nil {
