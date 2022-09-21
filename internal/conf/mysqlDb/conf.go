@@ -2,7 +2,6 @@ package mysqlDb
 
 import (
 	"fmt"
-	"log"
 	"os"
 )
 
@@ -22,26 +21,6 @@ func newConf() conf {
 	pwd := os.Getenv("MYSQL_PWD")
 	name := os.Getenv("MYSQL_DB")
 
-	if host == "" {
-		log.Println("MISSING DATABASE ENV: empty host\nChange to default host mysqlDb")
-		host = "cpfd"
-	}
-	if port == "" {
-		log.Println("MISSING DATABASE ENV: empty port\nChange to default port 3306")
-		port = "3306"
-	}
-	if user == "" {
-		log.Println("MISSING DATABASE ENV: empty user\nChange to default user root")
-		user = "root"
-	}
-	if pwd == "" {
-		log.Println("MISSING DATABASE ENV: empty dial\nChange to default password pwd")
-		pwd = "4406"
-	}
-	if name == "" {
-		log.Println("MISSING DATABASE ENV: empty dial\nChange to default name cpfd")
-		name = "cpfd"
-	}
 	return conf{
 		dial: "mysqlDb",
 		user: user,

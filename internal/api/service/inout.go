@@ -4,9 +4,10 @@ import (
 	"cpfd-back/internal/api/repo"
 	"cpfd-back/internal/core"
 	"encoding/csv"
-	"golang.org/x/exp/slices"
 	"log"
 	"os"
+
+	"golang.org/x/exp/slices"
 )
 
 type InoutService struct {
@@ -33,13 +34,13 @@ func (s *InoutService) GetAllLogsToFiles() ([][]string, error) {
 	f, err := os.Create("test.csv")
 	defer func() {
 		if err := f.Close(); err != nil {
-			log.Printf("[ERROR] Failed to close csv file: %v", err)
+			log.Printf("[ERROR] failed to close csv file: %v", err)
 			return
 		}
 	}()
 
 	if err != nil {
-		log.Printf("[ERROR] Failed to open csv file: %v", err)
+		log.Printf("[ERROR] failed to open csv file: %v", err)
 		return nil, err
 	}
 
@@ -47,11 +48,11 @@ func (s *InoutService) GetAllLogsToFiles() ([][]string, error) {
 	defer w.Flush()
 
 	if err := w.Write(core.CsvHeaders); err != nil {
-		log.Printf("[ERROR] Failed to write header to file: %v", err)
+		log.Printf("[ERROR] failed to write header to file: %v", err)
 		return nil, err
 	}
 	if err := w.WriteAll(rows); err != nil {
-		log.Printf("[ERROR] Failed to write file: %v", err)
+		log.Printf("[ERROR] failed to write file: %v", err)
 		return nil, err
 	}
 	return rows, nil

@@ -10,7 +10,7 @@ ENV PATH=$PATH:$GOROOT:$GOPATH:$GOBIN
 
 RUN apk --no-cache add tzdata
 
-EXPOSE 8080
+EXPOSE 80
 
 RUN mkdir /app
 ADD . /app

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 
 	logger "cpfd-back/internal/log"
 
@@ -15,23 +16,39 @@ type app struct {
 	Version    string
 	Production bool
 	Storage    []string
+	Port       string
 	Logger     string
 }
 
-func printAppInfo() {
-	fmt.Println("======= INFO =======")
-	fmt.Println("App name: ", viper.Get("app.name"))
-	fmt.Println("App version: ", viper.Get("app.version"))
-	fmt.Println("App production: ", viper.Get("app.production"))
-	fmt.Println("App storages: ", viper.Get("app.stroage"))
-	fmt.Println("App port: ", viper.Get("app.port"))
+func NewApp() *app {
+	_ = os.Setenv("TZ", "Asia/Seoul")
+	viper.SetConfigName("app")
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath("./")
+	if err := viper.ReadInConfig(); err != nil {
+		log.Fatalln("[ERROR] failed to read config file: ", err.Error())
+	}
+	if err := godotenv.Load("app.env"); err != nil {
+		log.Fatalln("[ERROR] failed to load env file: ", err.Error())
+	}
+	fmt.Println(os.Getwd())
+	logger.SetLogger()
+	return &app{
+		Name:       viper.GetString("app.name"),
+		Version:    viper.GetString("app.version"),
+		Production: viper.GetBool("app.production"),
+		Storage:    viper.GetStringSlice("app.storage"),
+		Port:       viper.GetString("app.port"),
+		Logger:     viper.GetString("app.logger"),
+	}
 }
 
-func setApp() {
-	viper.SetConfigFile("app.yaml")
-	if err := godotenv.Load("db.env"); err != nil {
-		log.Fatalln("[ERROR] Failed to load env file: ", err.Error())
-	}
-	printAppInfo()
-	logger.SetLogger()
+func (a *app) PrintAppInfo() {
+	fmt.Println("======= INFO =======")
+	fmt.Println("App name: ", viper.GetString("app.name"))
+	fmt.Println("App version: ", viper.GetString("app.version"))
+	fmt.Println("App production: ", viper.GetBool("app.production"))
+	fmt.Println("App storages: ", viper.GetStringSlice("app.storage"))
+	fmt.Println("App port: ", viper.GetString("app.port"))
+	fmt.Println("App logger: ", viper.GetString("app.logger"))
 }

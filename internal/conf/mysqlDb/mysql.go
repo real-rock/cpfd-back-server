@@ -3,10 +3,11 @@ package mysqlDb
 import (
 	"database/sql"
 	"fmt"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
 	"log"
 	"time"
+
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
 const maxIter = 20
@@ -35,7 +36,7 @@ func New() *DB {
 func (ms *DB) GetSqlDB() *sql.DB {
 	db, err := ms.DB.DB()
 	if err != nil {
-		log.Panicf("error while getting sql db: %v", err)
+		panic(err)
 	}
 	return db
 }

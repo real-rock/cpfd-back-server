@@ -31,7 +31,7 @@ func (r *InoutRepo) Init() {
 	}
 
 	for _, member := range core.Objects {
-		sqlCmd := fmt.Sprintf("SELECT action FROM %s WHERE `name` = '%s' ORDER BY time DESC LIMIT 1;",
+		sqlCmd := fmt.Sprintf("SELECT action FROM %s WHERE `name` = '%s' ORDER BY created_at DESC LIMIT 1;",
 			model.ActivityTable, member)
 
 		if err := r.Mysql.Raw(sqlCmd).Scan(&res).Error; err != nil {

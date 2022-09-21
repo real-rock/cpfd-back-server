@@ -35,11 +35,12 @@ func ConnRedis() *redisDb.Redis {
 
 func NewRouter() *Router {
 	if viper.Get("app.production") == true {
+		gin.SetMode(gin.ReleaseMode)
 		ginLog, err := os.Create("internal/log/gin.log")
 		if err == nil {
 			gin.DefaultWriter = io.MultiWriter(ginLog)
 		} else {
-			log.Println("[ERROR] Failed to create gin log file: ", err.Error())
+			log.Println("[ERROR] failed to create gin log file: ", err.Error())
 		}
 	}
 	router := gin.Default()
@@ -54,7 +55,7 @@ func NewRouter() *Router {
 }
 
 func (r *Router) Run() {
-	port := viper.Get("app.port")
+	port := viper.GetString("app.port")
 	if err := r.Engine.Run(fmt.Sprintf(":%s", port)); err != nil {
 		log.Fatalf("[ERROR] error while running server: %v", err)
 	}

@@ -22,7 +22,7 @@ func New() *DataGen {
 func (dg *DataGen) Request(req *pb.ParticleReq) (*pb.ParticleRes, error) {
 	conn, err := dg.connToGrpc()
 	if err != nil {
-		log.Fatalln(err)
+		panic(err)
 	}
 	defer func() {
 		if err := conn.Close(); err != nil {
