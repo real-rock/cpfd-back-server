@@ -21,9 +21,9 @@ type GetIndoorPropertyLogsParams struct {
 }
 
 type CreateIndoorPropertyLogParams struct {
-	Type      string  `gorm:"column:type json:"type"`
-	Value     float32 `gorm:"column:value json:"value"`
-	MachineID string  `gorm:"column:machine json:"machine_id"`
+	Type      string  `gorm:"column:type" json:"type"`
+	Value     float32 `gorm:"column:value" json:"value"`
+	MachineID string  `gorm:"column:machine" json:"machine_id"`
 }
 
 type GetParticleLogsWithDatesParams struct {
