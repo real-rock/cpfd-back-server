@@ -49,3 +49,14 @@ go run cmd/cpfd/*
 | Creat an indoor-property log         | POST    | /logs/indoor-property        | 실내 관측 데이터 로그 생성         |
 | Get indoor-property logs             | GET     | /logs/indoor-property        | 실내 관측 데이터를 JSON으로 반환    |
 | Get indoor-property logs to csv file | GET     | /logs/file/indoor-property   | 실내 관측 데이터를 CSV 파일로 반환   |
+
+
+## 기술 스택
+- gRPC
+- protobuf
+- MySQL
+- Redis
+- gin
+- gorm
+- viper
+- logrus
