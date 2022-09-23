@@ -4,3 +4,4 @@ db.env
 .vscode
 cpfd-mysql
 cpfd-mysql/*
+internal/log/*.log
