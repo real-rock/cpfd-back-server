@@ -14,7 +14,7 @@ type conf struct {
 }
 
 func newConf() conf {
-	addr := os.Getenv("REDIS_ADDR")
+	addr := os.Getenv("REDIS_HOST")
 	pwd := os.Getenv("REDIS_PWD")
 	db := os.Getenv("REDIS_DB")
 	port := os.Getenv("REDIS_PORT")
