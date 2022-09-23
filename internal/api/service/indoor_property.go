@@ -4,34 +4,49 @@ import (
 	"cpfd-back/internal/api/repo"
 	"cpfd-back/internal/core"
 	"cpfd-back/internal/core/model"
+	"cpfd-back/internal/util"
 	"time"
 )
 
-type IndoorPropertyService struct {
-	Repo *repo.IndoorPropertyRepo
+func (s *Service) CreateIndoorPropertyLog(p CreateIndoorPropertyLogParams) error {
+	machine, err := s.repo.GetMachineWithNum(p.MachineNum)
+	if err != nil {
+		return err
+	}
+	param := repo.CreateIndoorPropertyLogParams{
+		Type:      p.Type,
+		Value:     p.Value,
+		MachineID: machine.Id.String(),
+	}
+	return s.repo.CreateIndoorPropertyLog(param)
 }
 
-func NewIndoorPropertyService(repo *repo.IndoorPropertyRepo) *IndoorPropertyService {
-	return &IndoorPropertyService{
-		Repo: repo,
+func (s *Service) GetIndoorPropertyLogs(p repo.GetIndoorPropertyLogsParams) ([]model.IndoorProperty, error) {
+	if p.Start.IsZero() && p.End.IsZero() {
+		return s.repo.GetAllIndoorPropertyLogs()
+	} else if p.Start.IsZero() {
+		st, _ := time.Parse(core.TimeFormat, core.StartDate)
+		p.Start = st
 	}
+	return s.repo.GetIndoorPropertyLogsWithDates(p)
 }
 
-func (s *IndoorPropertyService) CreateLog(ip model.IndoorProperty) error {
-	ip.Time = time.Now()
-	return s.Repo.CreateLog(ip)
-}
+func (s *Service) GetIndoorPropertyLogsToCSV(p repo.GetIndoorPropertyLogsParams) (string, error) {
+	var ips interface{}
 
-func (s *IndoorPropertyService) GetLogToCSV(startTime, endTime time.Time) (string, error) {
-	start := startTime.Format("2006-01-02 15:04:05")
-	end := endTime.Format("2006-01-02 15:04:05")
-
-	if start == "0001-01-01 00:00:00" {
-		start = core.StartDate
+	if p.Start.IsZero() && p.End.IsZero() {
+		ips, err := s.repo.GetAllIndoorPropertyLogs()
+		if err != nil {
+			return "", err
+		}
+		return util.WriteTempCSV(ips, "ip_")
+	} else if p.Start.IsZero() {
+		st, _ := time.Parse(core.TimeFormat, core.StartDate)
+		p.Start = st
 	}
-	if end == "0001-01-01 00:00:00" {
-		end = time.Now().Format("2006-01-02 15:04:05")
+	ips, err := s.repo.GetIndoorPropertyLogsWithDates(p)
+	if err != nil {
+		return "", err
 	}
-
-	return s.Repo.GetLogToCSV(start, end)
+	return util.WriteTempCSV(ips, "ip_")
 }

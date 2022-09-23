@@ -5,36 +5,20 @@ import (
 	"cpfd-back/internal/core"
 	"cpfd-back/internal/core/model"
 	log "cpfd-back/internal/log"
-	"fmt"
-	"time"
 
 	"github.com/go-redis/redis/v8"
-	"gorm.io/gorm"
 )
 
-type InoutRepo struct {
-	Mysql *gorm.DB
-	Redis *redis.Client
-}
-
-func NewInoutRepo(mysqlDb *gorm.DB, redisDb *redis.Client) *InoutRepo {
-	return &InoutRepo{
-		Mysql: mysqlDb,
-		Redis: redisDb,
-	}
-}
-
-func (r *InoutRepo) Init() {
+func (r *Repo) Init() {
 	c := context.Background()
 	var res struct {
 		Action bool `gorm:"column:action"`
 	}
 
 	for _, member := range core.Objects {
-		sqlCmd := fmt.Sprintf("SELECT action FROM %s WHERE `name` = '%s' ORDER BY created_at DESC LIMIT 1;",
-			model.ActivityTable, member)
+		query := `SELECT action FROM activities WHERE name = ? ORDER BY created_at DESC LIMIT 1;`
 
-		if err := r.Mysql.Raw(sqlCmd).Scan(&res).Error; err != nil {
+		if err := r.Mysql.Raw(query, member).Scan(&res).Error; err != nil {
 			panic(err)
 		}
 		log.Logger.Infoln("action successfully fetched")
@@ -45,30 +29,28 @@ func (r *InoutRepo) Init() {
 	}
 }
 
-func (r *InoutRepo) GetLogs() ([][]string, error) {
-	var activities []map[string]interface{}
+func (r *Repo) GetActivityLogs() ([]model.Activity, error) {
+	var activities []model.Activity
 
-	if err := r.Mysql.Table(model.ActivityTable).Limit(100).Order("time desc").Find(&activities).Error; err != nil {
+	if err := r.Mysql.Limit(100).Order("created_at desc").Find(&activities).Error; err != nil {
 		log.Logger.Errorln("failed to get logs from mysql: ", err.Error())
 		return nil, err
 	}
-	values := make([][]string, len(activities))
-	i := 0
-	for _, activity := range activities {
-		vals := make([]string, 4)
+	//values := make([][]string, len(activities))
+	//for i, activity := range activities {
+	//	vals := make([]string, 4)
 
-		vals[0] = fmt.Sprintf("%v", activity["name"])
-		vals[1] = activity["time"].(time.Time).Format("2006-01-02 15:04:05")
-		vals[2] = fmt.Sprintf("%v", activity["action"])
-		vals[3] = fmt.Sprintf("%v", activity["type"])
+	//	vals[0] = fmt.Sprintf("%v", activity["name"])
+	//	vals[1] = activity["time"].(time.Time).Format("2006-01-02 15:04:05")
+	//	vals[2] = fmt.Sprintf("%v", activity["action"])
+	//	vals[3] = fmt.Sprintf("%v", activity["type"])
 
-		values[i] = vals
-		i += 1
-	}
-	return values, nil
+	//	values[i] = vals
+	//}
+	return activities, nil
 }
 
-func (r *InoutRepo) GetCurrentInfo() (map[string]bool, error) {
+func (r *Repo) GetCurrentActivity() (map[string]bool, error) {
 	m := make(map[string]bool)
 	c := context.Background()
 
@@ -90,18 +72,17 @@ func (r *InoutRepo) GetCurrentInfo() (map[string]bool, error) {
 	return m, nil
 }
 
-func (r *InoutRepo) CreateLog(name, objType string, action bool) error {
+func (r *Repo) CreateActivityLog(p CreateActivityLogParams) error {
 	activity := model.Activity{
-		Name:      name,
-		TimeStamp: time.Now(),
-		Action:    action,
-		Type:      objType,
+		Name:   p.Name,
+		Action: p.Action,
+		Type:   p.Type,
 	}
 	if err := r.Mysql.Create(&activity).Error; err != nil {
 		log.Logger.Errorln("error while saving data: ", err.Error())
 		return err
 	}
-	if err := r.Redis.Set(context.Background(), name, action, 0).Err(); err != nil {
+	if err := r.Redis.Set(context.Background(), p.Name, p.Action, 0).Err(); err != nil {
 		log.Logger.Errorln("failed to save information to redis db: ", err.Error())
 		return err
 	}

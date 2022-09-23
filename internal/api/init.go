@@ -62,28 +62,32 @@ func (r *Router) Run() {
 }
 
 func (r *Router) Set() {
-	r.setInout()
-	r.setParticle()
-	r.setIndoorProperty()
+	rp := repo.New(r.Mysql.DB, r.Redis.DB)
+	s := service.New(rp, grpc.New())
+	h := handler.New(s)
+	route.Set(r.Engine.Group("/v1"), h)
+	//r.setInout()
+	//r.setParticle()
+	//r.setIndoorProperty()
 }
 
-func (r *Router) setInout() {
-	re := repo.NewInoutRepo(r.Mysql.DB, r.Redis.DB)
-	s := service.NewInoutService(re)
-	h := handler.NewInoutHandler(s)
-	route.SetInout(r.Engine.Group("/v1"), h)
-}
+//func (r *Router) setInout() {
+//	re := repo.NewActivityRepo(r.Mysql.DB, r.Redis.DB)
+//	s := service.NewActivityService(re)
+//	h := handler.NewActivityHandler(s)
+//	route.SetInout(r.Engine.Group("/v1"), h)
+//}
 
-func (r *Router) setParticle() {
-	re := repo.NewParticleRepo(r.Mysql.DB)
-	s := service.NewParticleService(re, grpc.New())
-	h := handler.NewParticleHandler(s)
-	route.SetParticle(r.Engine.Group("/v1"), h)
-}
+//func (r *Router) setParticle() {
+//	re := repo.NewParticleRepo(r.Mysql.DB)
+//	s := service.NewParticleService(re, grpc.New())
+//	h := handler.NewParticleHandler(s)
+//	route.SetParticle(r.Engine.Group("/v1"), h)
+//}
 
-func (r *Router) setIndoorProperty() {
-	re := repo.NewIndoorPropertyRepo(r.Mysql.DB)
-	s := service.NewIndoorPropertyService(re)
-	h := handler.NewIndoorPropertyHandler(s)
-	route.SetIndoorProperty(r.Engine.Group("/v1"), h)
-}
+//func (r *Router) setIndoorProperty() {
+//	re := repo.NewIndoorPropertyRepo(r.Mysql.DB)
+//	s := service.NewIndoorPropertyService(re)
+//	h := handler.NewIndoorPropertyHandler(s)
+//	route.SetIndoorProperty(r.Engine.Group("/v1"), h)
+//}

@@ -7,4 +7,5 @@ var CsvHeaders = []string{"NAME", "TIME", "ACTION", "TYPE"}
 const MysqlFilePath = "/var/lib/mysql-files"
 const FileDir = "/mysql-files"
 
+const TimeFormat = "2006-01-02 15:04:05"
 const StartDate = "2022-05-06 09:00:00"

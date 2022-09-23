@@ -8,31 +8,46 @@ import (
 	"math/rand"
 	"strconv"
 	"time"
-
-	"gorm.io/gorm"
 )
 
-type ParticleRepo struct {
-	Mysql *gorm.DB
-}
-
-func NewParticleRepo(sqlDb *gorm.DB) *ParticleRepo {
-	return &ParticleRepo{
-		Mysql: sqlDb,
+func (r *Repo) CreateParticleLog(p CreateParticleLogParams) error {
+	if err := r.Mysql.Table("particles").Create(&p).Error; err != nil {
+		log.Logger.Errorln("failed to create particle: ", err.Error())
+		return err
 	}
+	return nil
 }
 
-func (r *ParticleRepo) GetAllLogs() ([]model.Particle, error) {
+func (r *Repo) GetAllParticleLogs() ([]model.Particle, error) {
 	var particles []model.Particle
 
-	if err := r.Mysql.Find(&particles).Error; err != nil {
+	cmd := `SELECT created_at, pm1, pm2_5, pm10, machine, machine_num
+	FROM particles left join machines m on m.id = particles.machine
+	ORDER BY created_at;`
+
+	if err := r.Mysql.Raw(cmd).Scan(&particles).Error; err != nil {
 		log.Logger.Errorf("failed to get particles from sql db: %v", err)
 		return nil, err
 	}
 	return particles, nil
 }
 
-func (r *ParticleRepo) GetAllLogsToFile(start, end string) ([]string, error) {
+func (r *Repo) GetParticleLogsWithDates(p GetParticleLogsWithDatesParams) ([]model.Particle, error) {
+	var particles []model.Particle
+
+	cmd := `SELECT created_at, pm1, pm2_5, pm10, machine, machine_num 
+	FROM particles left join machines m on m.id = particles.machine
+	WHERE created_at BETWEEN ? and ?
+	ORDER BY created_at;`
+
+	if err := r.Mysql.Raw(cmd, p.Start, p.End).Scan(&particles).Error; err != nil {
+		log.Logger.Errorf("failed to get particles from sql db: %v", err)
+		return nil, err
+	}
+	return particles, nil
+}
+
+func (r *Repo) GetAllLogsToFile(start, end string) ([]string, error) {
 	num := rand.New(rand.NewSource(time.Now().UnixNano())).Intn(100)
 	name := "particle_" + strconv.Itoa(num)
 	activityName := "activity_" + strconv.Itoa(num)
@@ -60,7 +75,7 @@ func (r *ParticleRepo) GetAllLogsToFile(start, end string) ([]string, error) {
 	return []string{core.FileDir + "/" + name + ".csv", core.FileDir + "/" + activityName + ".csv"}, nil
 }
 
-func (r *ParticleRepo) GetLogsWithDates(start, end string) (map[string][]map[string]interface{}, error) {
+func (r *Repo) GetLogsWithDates(start, end string) (map[string][]map[string]interface{}, error) {
 	particles := make(map[string][]map[string]interface{})
 	machines := []string{"107", "120", "121", "124", "134", "181", "196", "199"}
 
@@ -80,7 +95,7 @@ func (r *ParticleRepo) GetLogsWithDates(start, end string) (map[string][]map[str
 	return particles, nil
 }
 
-func (r *ParticleRepo) GetLogsToFile(machine []string, start, end string) (string, error) {
+func (r *Repo) GetLogsToFile(machine []string, start, end string) (string, error) {
 	num := rand.New(rand.NewSource(time.Now().UnixNano())).Intn(100)
 	name := "particle_" + strconv.Itoa(num)
 
@@ -101,8 +116,4 @@ func (r *ParticleRepo) GetLogsToFile(machine []string, start, end string) (strin
 		return "", err
 	}
 	return core.FileDir + "/" + name + ".csv", nil
-}
-
-func (r *ParticleRepo) CreateLog(p model.Particle) error {
-	return r.Mysql.Create(&p).Error
 }
