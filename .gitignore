@@ -5,3 +5,4 @@ db.env
 cpfd-mysql
 cpfd-mysql/*
 internal/log/*.log
+static/*

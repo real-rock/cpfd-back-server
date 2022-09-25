@@ -36,17 +36,6 @@ func (r *Repo) GetActivityLogs() ([]model.Activity, error) {
 		log.Logger.Errorln("failed to get logs from mysql: ", err.Error())
 		return nil, err
 	}
-	//values := make([][]string, len(activities))
-	//for i, activity := range activities {
-	//	vals := make([]string, 4)
-
-	//	vals[0] = fmt.Sprintf("%v", activity["name"])
-	//	vals[1] = activity["time"].(time.Time).Format("2006-01-02 15:04:05")
-	//	vals[2] = fmt.Sprintf("%v", activity["action"])
-	//	vals[3] = fmt.Sprintf("%v", activity["type"])
-
-	//	values[i] = vals
-	//}
 	return activities, nil
 }
 

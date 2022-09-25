@@ -19,7 +19,7 @@ func New() *DataGen {
 	return &dg
 }
 
-func (dg *DataGen) Request(req *pb.ParticleReq) (*pb.ParticleRes, error) {
+func (dg *DataGen) Request(req *pb.LogRequest) (*pb.LogResponse, error) {
 	conn, err := dg.connToGrpc()
 	if err != nil {
 		panic(err)
@@ -31,7 +31,7 @@ func (dg *DataGen) Request(req *pb.ParticleReq) (*pb.ParticleRes, error) {
 	}()
 
 	client := pb.NewDataGeneratorClient(conn)
-	return client.GenParticle(dg.ctx, req)
+	return client.GenerateAllLog(dg.ctx, req)
 }
 
 func (dg *DataGen) connToGrpc() (*grpc.ClientConn, error) {

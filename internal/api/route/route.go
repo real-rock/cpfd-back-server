@@ -10,6 +10,8 @@ func Set(router *gin.RouterGroup, h handler.HandlerManager) {
 	router.GET("/machines", h.GetMachine)
 	router.POST("/machines", h.CreateMachine)
 
+	router.GET("/logs/file", h.GetAllLogsToCSV)
+
 	router.GET("/logs/activity", h.GetActivityLogs)
 	router.GET("/logs/file/activity", h.GetActivityLogsToCSV)
 	router.POST("/logs/activity", h.CreateActivityLog)

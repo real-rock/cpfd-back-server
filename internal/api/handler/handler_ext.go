@@ -1,22 +1,12 @@
 package handler
 
 import (
-	"net/http"
-	"os"
+	"cpfd-back/internal/core"
 
 	"github.com/gin-gonic/gin"
 )
 
 func (h *Handler) GetAllLogsToCSV(ctx *gin.Context) {
-	fPath, err := h.service.GetAllLogsToCSV()
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, err.Error())
-		return
-	}
+	fPath := core.FileDir + "/data.csv"
 	ctx.File(fPath)
-	defer func() {
-		if err := os.Remove(fPath); err != nil {
-			return
-		}
-	}()
 }
