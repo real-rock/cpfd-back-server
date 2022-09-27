@@ -1,7 +1,7 @@
 app:
   name: cpfd
-  version: 1.0.0
-  production: false
+  version: 0.0.7
+  production: true
   storage:
     - mysql
     - redis
